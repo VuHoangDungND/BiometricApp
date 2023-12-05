@@ -1,10 +1,16 @@
 import { StyleSheet, View, Pressable, Text } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
-function Button({ label , onPress}) {
+function Button({ label , onPress, icon}) {
   return (
     <View style={styles.buttonContainer}>
       <Pressable style={styles.button} onPress={onPress}>
         <Text style={styles.buttonLabel}>{label}</Text>
+        { icon ? <MaterialIcons
+          name={icon}
+          size={18}
+        /> : null }
+        
       </Pressable>
     </View>
   );
@@ -36,6 +42,7 @@ const styles = StyleSheet.create({
   buttonLabel: {
     color: '#000',
     fontSize: 16,
+    paddingRight: 8,
   },
 });
 

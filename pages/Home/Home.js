@@ -13,9 +13,9 @@ function Home({navigation}) {
 
           <Button label='Đăng kí' onPress={() => navigation.navigate('Register')}/>
 
-          <Button label='Nhận diện khuôn mặt' onPress={() => navigation.navigate('LoginWithFace')}/>
+          <Button label='Nhận diện khuôn mặt' onPress={() => navigation.navigate('LoginWithFace')} icon="tag-faces"/>
 
-          <Button label='Nhận diện vân tay' onPress={() => navigation.navigate('LoginWithFinger')}/>
+          <Button label='Nhận diện vân tay' onPress={() => navigation.navigate('LoginWithFinger')} icon="fingerprint"/>
 
           <Button label='Nhận diện cả khuôn mặt và vân tay' onPress={() => navigation.navigate('LoginAll')}/>
         </View>
