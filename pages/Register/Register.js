@@ -1,18 +1,16 @@
 import {  Text, View, StyleSheet, TextInput } from 'react-native';
-import { useState, useRef, useEffect } from 'react'; 
+import { useState, useRef} from 'react'; 
 import Button from '../../components/Button';
 import { Camera, CameraType } from 'expo-camera';
-
-
+import axios from 'axios';
 
 function Register() {
 
-    const [text, onChangeText] = useState();
+    const [text, onChangeText] = useState('');
     const cameraRef = useRef(null);
     const [image, setImage] = useState(null);
     const [hasCameraPermission, setHasCameraPermission] = useState(false);
     const [type, setType] = useState(CameraType.back);
-
 
     const openCamera = async() =>{
         const cameraStatus = await Camera.requestCameraPermissionsAsync();
@@ -20,12 +18,29 @@ function Register() {
         if(!cameraStatus.granted) alert("No access to camera");
     }
 
+
+
+    const convertToBlob = async (base64String) => {
+      try {
+        const response = await fetch(`${base64String}`);
+        const blob = await response.blob();
+        const file = new File([blob],'Image.png',{type: blob.type});
+        file.preview = URL.createObjectURL(blob);
+        return file;
+        // Bạn có thể gửi blob đến máy chủ hoặc thực hiện các xử lý khác ở đây
+      } catch (error) {
+        console.error('Error converting to blob:', error);
+      }
+    };
+  
+
     const takePicture = async() => {
-      if(cameraRef) {
+      if(cameraRef.current) {
         try{
           const data = await cameraRef.current.takePictureAsync();
-          console.log(data);
-          setImage(data.uri);
+          // chuyển ảnh thành blob rồi thành file ảnh để gửi
+          const image = await convertToBlob(data.base64);
+          setImage(image);
         } catch(e) {
           console.log(e);
         }
@@ -33,9 +48,24 @@ function Register() {
       setHasCameraPermission(false);
     }
 
+
     const toggleCameraType = () => {
       setType(current => (current === CameraType.back? CameraType.front: CameraType.back));
     };
+
+    const handleSubmit = () => {
+      const formData = new FormData();
+      formData.append('info', JSON.stringify(text));
+      formData.append('file', image);
+
+      const fetchApi = async() => {
+        const res = await axios.post('http://localhost:5000/api/', formData);
+        console.log(res);
+        alert(res.data.message);
+      }
+
+      fetchApi();
+    }
 
     return (
       <View style={styles.container}>
@@ -49,8 +79,7 @@ function Register() {
               onChangeText={onChangeText}
               value={text} />
           <Button label="Nhập khuôn măt" onPress={openCamera} icon="check-circle"/>
-          <Button label="Nhập vân tay" onPress={openCamera} icon="check-circle"/>
-          <Button label="Đăng ký" onPress={openCamera} />
+          <Button label="Đăng ký" onPress={handleSubmit} />
           </View>
         ) : (
           <View style={styles.cameraContainer}>

@@ -1,9 +1,21 @@
+import axios from 'axios';
 import { StyleSheet, Text, View, Image, Pressable } from 'react-native';
 import Button from '../../components/Button';
 
 const Logo = require('../../images/logo.jpg');
 
 function Home({navigation}) {
+
+    const handleDelete = () => {
+
+      const fetchApi = async() => {
+        const res = await axios.get('http://localhost:5000/api/delete');
+        console.log(res);
+        alert(res.data.message);
+      }
+
+      fetchApi();
+    }
     return (
         <View style={styles.container}>
 
@@ -17,7 +29,7 @@ function Home({navigation}) {
 
           <Button label='Nhận diện vân tay' onPress={() => navigation.navigate('LoginWithFinger')} icon="fingerprint"/>
 
-          <Button label='Nhận diện cả khuôn mặt và vân tay' onPress={() => navigation.navigate('LoginAll')}/>
+          <Button label='Xóa dữ liệu đã lưu trữ ' onPress={handleDelete}/>
         </View>
       );
 };
