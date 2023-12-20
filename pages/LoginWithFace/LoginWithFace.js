@@ -1,13 +1,16 @@
 import axios from 'axios';
 import { StyleSheet, Text, View } from 'react-native';
 import { useState, useRef, useEffect } from 'react'; 
-import Button from '../../components/Button';
 import { Camera, CameraType } from 'expo-camera';
 
-function LoginWithFace() {
+import Button from '../../components/Button';
+import LoadingScreen from '../../components/LoadingScreen';
+
+function LoginWithFace({navigation}) {
     const cameraRef = useRef(null);
     const [hasCameraPermission, setHasCameraPermission] = useState(false);
     const [type, setType] = useState(CameraType.back);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
       (async () => {
@@ -17,30 +20,33 @@ function LoginWithFace() {
       })();
     },[]);
 
-    const convertToBlob = async (base64String) => {
-      try {
-        const response = await fetch(`${base64String}`);
-        const blob = await response.blob();
-        const file = new File([blob],'Image.png',{type: blob.type});
-        file.preview = URL.createObjectURL(blob);
-        return file;
-        // Bạn có thể gửi blob đến máy chủ hoặc thực hiện các xử lý khác ở đây
-      } catch (error) {
-        console.error('Error converting to blob:', error);
-      }
-    };
 
-    const detectFace = async (image) => {
+    const detectFace = async (data) => {
+      let uri = data?.uri;
+      let uriParts = uri.split('.');
+      let fileType = uriParts[uriParts.length - 1];
+
       const formData = new FormData();
-      formData.append('file', image);
+      formData.append('file', {uri, name: `image.${fileType}`, type: `image/${fileType}`});
 
       const fetchApi = async() => {
-        const res = await axios.post('http://localhost:5000/api/checkFace', formData);
+        setLoading(true);
+        let options = {
+          method: 'POST',
+          body: formData,
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'multipart/form-data',
+          },
+        };
+        const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/checkFace`, formData, options)
         if(res.data.label) {
           alert(`Chào mừng bạn ${res.data.label} quay trở lại. Chúc bạn một ngày tốt lành`);
         } else {
           alert("Xác thực sai");
         }
+        navigation.goBack();
+        setLoading(false);
       }
 
       fetchApi();
@@ -50,12 +56,10 @@ function LoginWithFace() {
       if(cameraRef) {
         try{
           const data = await cameraRef.current.takePictureAsync();
-          // chuyển ảnh thành blob rồi thành file ảnh để gửi
-          const image = await convertToBlob(data.base64);
-          detectFace(image);
+          detectFace(data);
 
         } catch(e) {
-          console.log(e);
+          console.log('Taking picture error:',e);
         }
       }
     }
@@ -66,19 +70,25 @@ function LoginWithFace() {
 
     return (
       <View style={styles.container}>
-        <View style={styles.cameraContainer}>
-          <Camera 
-            style={styles.camera}
-            type={type}
-            ref={cameraRef}>
-            <View>
-              <Button icon="flip-camera-android" onPress={toggleCameraType}/>
+        {
+          loading? (
+            <LoadingScreen/>
+          ) : (
+            <View style={styles.cameraContainer}>
+              <Camera 
+                style={styles.camera}
+                type={type}
+                ref={cameraRef}>
+                <View>
+                  <Button icon="flip-camera-android" onPress={toggleCameraType}/>
+                </View>
+              </Camera>
+              <View style={styles.bottom}>
+                <Button label="Nhận diện" icon="camera" onPress={takePicture}/>
+              </View>
             </View>
-          </Camera>
-          <View style={styles.bottom}>
-            <Button label="Nhận diện" icon="camera" onPress={takePicture}/>
-          </View>
-        </View>
+          )
+        }
       </View>
       );
 }

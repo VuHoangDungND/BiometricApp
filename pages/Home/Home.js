@@ -1,17 +1,23 @@
 import axios from 'axios';
-import { StyleSheet, Text, View, Image, Pressable } from 'react-native';
+import { StyleSheet, View, Image } from 'react-native';
+import { useState } from 'react'; 
+
 import Button from '../../components/Button';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const Logo = require('../../images/logo.jpg');
 
 function Home({navigation}) {
+    const [loading, setLoading] = useState(false);
 
     const handleDelete = () => {
-
+      setLoading(true);
       const fetchApi = async() => {
-        const res = await axios.get('http://localhost:5000/api/delete');
-        console.log(res);
-        alert(res.data.message);
+        const res = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/delete`);
+        if(res) {
+          alert(res.data.message);
+        }
+        setLoading(false);
       }
 
       fetchApi();
@@ -19,17 +25,23 @@ function Home({navigation}) {
     return (
         <View style={styles.container}>
 
-          <View style={styles.imageContainer}>
-            <Image source={Logo} style={styles.image} resizeMode='contain'/>
-          </View>
+          {loading ? (
+            <LoadingScreen/>
+          ) : (
+            <View style={styles.mainScreen}>
+              <View style={styles.imageContainer}>
+                <Image source={Logo} style={styles.image} resizeMode='contain'/>
+              </View>
 
-          <Button label='Đăng kí' onPress={() => navigation.navigate('Register')}/>
+              <Button label='Đăng kí' onPress={() => navigation.navigate('Register')}/>
 
-          <Button label='Nhận diện khuôn mặt' onPress={() => navigation.navigate('LoginWithFace')} icon="tag-faces"/>
+              <Button label='Nhận diện khuôn mặt' onPress={() => navigation.navigate('LoginWithFace')} icon="tag-faces"/>
 
-          <Button label='Nhận diện vân tay' onPress={() => navigation.navigate('LoginWithFinger')} icon="fingerprint"/>
+              <Button label='Nhận diện vân tay' onPress={() => navigation.navigate('LoginWithFinger')} icon="fingerprint"/>
 
-          <Button label='Xóa dữ liệu đã lưu trữ ' onPress={handleDelete}/>
+              <Button label='Xóa dữ liệu đã lưu trữ ' onPress={handleDelete}/>
+            </View>
+          )}
         </View>
       );
 };
@@ -38,8 +50,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#25292e',
+  },
+
+  mainScreen : {
     alignItems: 'center',
-    justifyContent: 'center',
   },
 
   imageContainer: {

@@ -1,16 +1,19 @@
 import {  Text, View, StyleSheet, TextInput } from 'react-native';
 import { useState, useRef} from 'react'; 
-import Button from '../../components/Button';
 import { Camera, CameraType } from 'expo-camera';
 import axios from 'axios';
 
-function Register() {
+import Button from '../../components/Button';
+import LoadingScreen from '../../components/LoadingScreen';
+
+function Register({navigation}) {
 
     const [text, onChangeText] = useState('');
     const cameraRef = useRef(null);
     const [image, setImage] = useState(null);
     const [hasCameraPermission, setHasCameraPermission] = useState(false);
     const [type, setType] = useState(CameraType.back);
+    const [loading, setLoading] = useState(false);
 
     const openCamera = async() =>{
         const cameraStatus = await Camera.requestCameraPermissionsAsync();
@@ -18,29 +21,12 @@ function Register() {
         if(!cameraStatus.granted) alert("No access to camera");
     }
 
-
-
-    const convertToBlob = async (base64String) => {
-      try {
-        const response = await fetch(`${base64String}`);
-        const blob = await response.blob();
-        const file = new File([blob],'Image.png',{type: blob.type});
-        file.preview = URL.createObjectURL(blob);
-        return file;
-        // Bạn có thể gửi blob đến máy chủ hoặc thực hiện các xử lý khác ở đây
-      } catch (error) {
-        console.error('Error converting to blob:', error);
-      }
-    };
-  
-
     const takePicture = async() => {
       if(cameraRef.current) {
         try{
           const data = await cameraRef.current.takePictureAsync();
           // chuyển ảnh thành blob rồi thành file ảnh để gửi
-          const image = await convertToBlob(data.base64);
-          setImage(image);
+          setImage(data);
         } catch(e) {
           console.log(e);
         }
@@ -54,14 +40,32 @@ function Register() {
     };
 
     const handleSubmit = () => {
+
+      let uri = image?.uri;
+      let uriParts = uri.split('.');
+      let fileType = uriParts[uriParts.length - 1];
+
       const formData = new FormData();
       formData.append('info', JSON.stringify(text));
-      formData.append('file', image);
+      formData.append('file', {uri, name: `image.${fileType}`, type: `image/${fileType}`});
 
+      
       const fetchApi = async() => {
-        const res = await axios.post('http://localhost:5000/api/', formData);
-        console.log(res);
-        alert(res.data.message);
+        setLoading(true);
+        let options = {
+          method: 'POST',
+          body: formData,
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'multipart/form-data',
+          },
+        };
+        const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}`, formData,options);
+        if(res) {
+          alert(res.data.message);
+        }
+        navigation.goBack();
+        setLoading(false);
       }
 
       fetchApi();
@@ -72,14 +76,21 @@ function Register() {
       {
         !hasCameraPermission? (
           <View>
-        
-          <Text style={styles.label}> Nhập tên để đăng ký</Text>
-          <TextInput
-              style={styles.input}
-              onChangeText={onChangeText}
-              value={text} />
-          <Button label="Nhập khuôn măt" onPress={openCamera} icon="check-circle"/>
-          <Button label="Đăng ký" onPress={handleSubmit} />
+          {
+            loading ? (
+              <LoadingScreen/>
+            ) : (
+              <View style={styles.mainScreen}>
+                <Text style={styles.label}> Nhập tên để đăng ký</Text>
+                <TextInput
+                    style={styles.input}
+                    onChangeText={onChangeText}
+                    value={text} />
+                <Button label="Nhập khuôn mặt" onPress={openCamera} icon="check-circle"/>
+                <Button label="Đăng ký" onPress={handleSubmit} />
+              </View>
+            )
+          }
           </View>
         ) : (
           <View style={styles.cameraContainer}>
@@ -104,10 +115,12 @@ function Register() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#25292e',
-    alignItems: 'center',
+    backgroundColor: '#25292e',    
     justifyContent: 'center',
   },
+  mainScreen:{
+    alignItems: 'center',
+  },  
   label: {
     color: '#fff',
     fontSize: 24
