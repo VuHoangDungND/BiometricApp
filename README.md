@@ -25,4 +25,5 @@ eas build -p android
 ```
 4.Done! Now, you have file .apk in expo web and you can install through there.
 
-
+### Note
+You should change file .env for test in local and file eas.json for deloy in EXPO_PUBLIC_API_URL because it use my api.
