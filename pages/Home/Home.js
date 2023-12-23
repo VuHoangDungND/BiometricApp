@@ -39,7 +39,9 @@ function Home({navigation}) {
 
               <Button label='Nhận diện vân tay' onPress={() => navigation.navigate('LoginWithFinger')} icon="fingerprint"/>
 
-              <Button label='Xóa dữ liệu đã lưu trữ ' onPress={handleDelete}/>
+              <Button label='Dữ liệu lưu trữ ' onPress={handleDelete}/>
+
+              <Button label='Xóa dữ liệu' onPress={handleDelete}/>
             </View>
           )}
         </View>
