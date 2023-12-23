@@ -10,18 +10,6 @@ const Logo = require('../../images/logo.jpg');
 function Home({navigation}) {
     const [loading, setLoading] = useState(false);
 
-    const handleDelete = () => {
-      setLoading(true);
-      const fetchApi = async() => {
-        const res = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/delete`);
-        if(res) {
-          alert(res.data.message);
-        }
-        setLoading(false);
-      }
-
-      fetchApi();
-    }
     return (
         <View style={styles.container}>
 
@@ -39,9 +27,9 @@ function Home({navigation}) {
 
               <Button label='Nhận diện vân tay' onPress={() => navigation.navigate('LoginWithFinger')} icon="fingerprint"/>
 
-              <Button label='Dữ liệu lưu trữ ' onPress={handleDelete}/>
+              <Button label='Dữ liệu lưu trữ ' onPress={() => navigation.navigate('ShowData')} icon="storage"/>
 
-              <Button label='Xóa dữ liệu' onPress={handleDelete}/>
+              <Button label='Xóa dữ liệu' onPress={() => navigation.navigate('Delete')} icon="delete-forever"/>
             </View>
           )}
         </View>

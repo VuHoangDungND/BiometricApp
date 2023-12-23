@@ -60,7 +60,7 @@ function Register({navigation}) {
             'Content-Type': 'multipart/form-data',
           },
         };
-        const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}`, formData,options);
+        const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/register`, formData,options);
         if(res) {
           alert(res.data.message);
         }

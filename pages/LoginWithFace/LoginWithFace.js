@@ -13,11 +13,11 @@ function LoginWithFace({navigation}) {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-      (async () => {
+      async () => {
         const cameraStatus = await Camera.requestCameraPermissionsAsync();
         setHasCameraPermission(cameraStatus.granted);
         if(!cameraStatus.granted) alert("No access to camera");
-      })();
+      };
     },[]);
 
 
