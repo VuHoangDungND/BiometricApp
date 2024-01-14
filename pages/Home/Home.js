@@ -27,6 +27,8 @@ function Home({navigation}) {
 
               <Button label='Nhận diện vân tay' onPress={() => navigation.navigate('LoginWithFinger')} icon="fingerprint"/>
 
+              <Button label='Nhận diện cả hai' onPress={() => navigation.navigate('LoginAll')}/>
+
               <Button label='Dữ liệu lưu trữ ' onPress={() => navigation.navigate('ShowData')} icon="storage"/>
 
               <Button label='Xóa dữ liệu' onPress={() => navigation.navigate('Delete')} icon="delete-forever"/>
@@ -44,6 +46,7 @@ const styles = StyleSheet.create({
 
   mainScreen : {
     alignItems: 'center',
+    overflow: 'hidden'
   },
 
   imageContainer: {

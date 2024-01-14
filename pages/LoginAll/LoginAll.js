@@ -2,11 +2,12 @@ import {  Text, View, StyleSheet, TextInput } from 'react-native';
 import { useState, useRef} from 'react'; 
 import { Camera, CameraType } from 'expo-camera';
 import axios from 'axios';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 import Button from '../../components/Button';
 import LoadingScreen from '../../components/LoadingScreen';
 
-function Register({navigation}) {
+function LoginAll({navigation}) {
 
     const [text, onChangeText] = useState('');
     const cameraRef = useRef(null);
@@ -14,6 +15,8 @@ function Register({navigation}) {
     const [hasCameraPermission, setHasCameraPermission] = useState(false);
     const [type, setType] = useState(CameraType.back);
     const [loading, setLoading] = useState(false);
+    const [fingerCheck, setFingerCheck] = useState(false);
+    const [fingerData, setFingerData] = useState(false);
 
     const openCamera = async() =>{
         const cameraStatus = await Camera.requestCameraPermissionsAsync();
@@ -41,17 +44,16 @@ function Register({navigation}) {
 
     const handleSubmit = () => {
 
-      if( !image ){
-        alert('Vui lòng nhập dữ liệu khuôn mặt');
-        return;
-      }
+        if( !image || !fingerData ){
+            alert('Vui lòng nhập dữ liệu còn thiếu');
+            return;
+        }
 
       let uri = image?.uri;
       let uriParts = uri.split('.');
       let fileType = uriParts[uriParts.length - 1];
 
       const formData = new FormData();
-      formData.append('info', JSON.stringify(text));
       formData.append('file', {uri, name: `image.${fileType}`, type: `image/${fileType}`});
 
       
@@ -65,9 +67,11 @@ function Register({navigation}) {
             'Content-Type': 'multipart/form-data',
           },
         };
-        const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/register`, formData,options);
-        if(res) {
-          alert(res.data.message);
+        const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/checkFace`, formData,options);
+        if(res.data.label === text && fingerCheck) {
+          alert(`Nhận diện cả khuôn mặt và vân tay thành công. Chào mừng bạn ${res.data.label} quay trở lại.`);
+        } else {
+            alert("Nhận diện không thành công");
         }
         navigation.goBack();
         setLoading(false);
@@ -75,6 +79,32 @@ function Register({navigation}) {
 
       fetchApi();
     }
+
+    const checkFinger = async () => {
+        const hasBiometric = await LocalAuthentication.hasHardwareAsync();
+        const biometricTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
+        if(hasBiometric && biometricTypes.length > 0) {
+        try {
+          const result = await LocalAuthentication.authenticateAsync({
+            promptMessage: 'Vui lòng nhập vân tay',
+          });
+          setFingerData(true);
+    
+          if (result.success) {
+            // trường hợp thành công
+            setFingerCheck(true);
+          } else {
+            // trường hợp thất bại
+            setFingerCheck(false);
+          }
+        } catch (error) {
+          // trường hợp lỗi : người dùng hủy bỏ
+          alert('Lỗi xác thực:', error);
+        }
+        } else {
+            alert('Thiết bị chưa được hỗ trợ xác thực');
+        }
+      };
 
     return (
       <View style={styles.container}>
@@ -86,13 +116,14 @@ function Register({navigation}) {
               <LoadingScreen/>
             ) : (
               <View style={styles.mainScreen}>
-                <Text style={styles.label}> Nhập tên để đăng ký</Text>
+                <Text style={styles.label}> Nhập tên xác minh </Text>
                 <TextInput
                     style={styles.input}
                     onChangeText={onChangeText}
                     value={text} />
                 <Button label="Nhập khuôn mặt" onPress={openCamera} icon={image? "check-box":"check-box-outline-blank"}/>
-                <Button label="Đăng ký" onPress={handleSubmit} />
+                <Button label="Nhập vân tay" onPress={checkFinger} icon={fingerData? "check-box":"check-box-outline-blank"}/>
+                <Button label="Xác minh" onPress={handleSubmit} />
               </View>
             )
           }
@@ -154,4 +185,4 @@ const styles = StyleSheet.create({
     bottom: 100,
   }
 })
-export default Register;
+export default LoginAll;

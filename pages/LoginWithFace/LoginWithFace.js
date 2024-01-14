@@ -41,9 +41,9 @@ function LoginWithFace({navigation}) {
         };
         const res = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/checkFace`, formData, options)
         if(res.data.label) {
-          alert(`Chào mừng bạn ${res.data.label} quay trở lại. Chúc bạn một ngày tốt lành`);
+          alert(`Nhận diện khuôn mặt thành công. Chào mừng bạn ${res.data.label} quay trở lại`);
         } else {
-          alert("Xác thực sai");
+          alert("Nhận diện không thành công");
         }
         navigation.goBack();
         setLoading(false);
