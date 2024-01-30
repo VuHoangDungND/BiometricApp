@@ -10,28 +10,33 @@ function Register({navigation}) {
 
     const [text, onChangeText] = useState('');
     const cameraRef = useRef(null);
-    const [image, setImage] = useState(null);
+    const [images, setImages] = useState([]);
     const [hasCameraPermission, setHasCameraPermission] = useState(false);
     const [type, setType] = useState(CameraType.back);
     const [loading, setLoading] = useState(false);
+    const [count, setCount ] = useState(0);
 
     const openCamera = async() =>{
+        setImages([]);
         const cameraStatus = await Camera.requestCameraPermissionsAsync();
         setHasCameraPermission(cameraStatus.granted);
         if(!cameraStatus.granted) alert("No access to camera");
     }
 
     const takePicture = async() => {
-      if(cameraRef.current) {
+      if(cameraRef.current && count < 3) {
         try{
           const data = await cameraRef.current.takePictureAsync();
           // chuyển ảnh thành blob rồi thành file ảnh để gửi
-          setImage(data);
+          setImages([...images, data]);
+          setCount(count+1);
         } catch(e) {
           console.log(e);
         }
+      } else {
+        setCount(0);
+        setHasCameraPermission(false);
       }
-      setHasCameraPermission(false);
     }
 
 
@@ -41,18 +46,21 @@ function Register({navigation}) {
 
     const handleSubmit = () => {
 
-      if( !image ){
+      if( images.length == 0 ){
         alert('Vui lòng nhập dữ liệu khuôn mặt');
         return;
       }
 
-      let uri = image?.uri;
-      let uriParts = uri.split('.');
-      let fileType = uriParts[uriParts.length - 1];
+      
 
       const formData = new FormData();
       formData.append('info', JSON.stringify(text));
-      formData.append('file', {uri, name: `image.${fileType}`, type: `image/${fileType}`});
+      images.forEach(img => {
+        let uri = img?.uri;
+        let uriParts = uri.split('.');
+        let fileType = uriParts[uriParts.length - 1];
+        formData.append('file', {uri, name: `image.${fileType}`, type: `image/${fileType}`});
+      })
 
       
       const fetchApi = async() => {
@@ -79,7 +87,7 @@ function Register({navigation}) {
     return (
       <View style={styles.container}>
       {
-        !hasCameraPermission? (
+        !hasCameraPermission ? (
           <View>
           {
             loading ? (
@@ -91,7 +99,7 @@ function Register({navigation}) {
                     style={styles.input}
                     onChangeText={onChangeText}
                     value={text} />
-                <Button label="Nhập khuôn mặt" onPress={openCamera} icon={image? "check-box":"check-box-outline-blank"}/>
+                <Button label="Nhập khuôn mặt" onPress={openCamera} icon={images.length >= 3? "check-box":"check-box-outline-blank"}/>
                 <Button label="Đăng ký" onPress={handleSubmit} />
               </View>
             )
